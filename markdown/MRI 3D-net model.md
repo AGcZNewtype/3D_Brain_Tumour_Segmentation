@@ -162,9 +162,7 @@ img[mask] = (img[mask] - mean) / (std + 1e-8)
 $$
 公式内容为非0数据减去中间值，形成以0为中心左右分布的整数值，再除以标准差（方差），其中为防止除0问题，需要给标准差加入一个极小数（1e-8为0.00000001）。对比一下标准化前后的图像：
 
-
-
-
+![image-20250801120602225](./assets/image-20250801120602225.png)
 
 在经过标准化后，将四个模态的图像添加到“images”数组中（这里还相当于是四个list），使用np.stack()功能将四个模态的图像合并成4维的数组（相当于将4list合并成数组的列——新的维度，前提是要确保这四个list中的结构是相同的，例如都是240，240，155），最终image_np数组结构为[4,240,240,155]，其中4代表了4个模态的图像。
 
@@ -188,15 +186,76 @@ label_np = seg.astype(np.uint8)      # [H, W, D] 长度，宽度，深度(切片
 
 
 
+使用np.stack()对images数组列表进行整合，就是将4个列表合并并转化为新的维度(4x[240,240,155]组合成[4,240,240,155])
 
+对标签数组进行数据类型转换，我个人设备不支持浮点等运算，所以得把训练数据中的浮点转换成整数形式，使用np.astype(np.uint8)
 
-```
-    image_np = np.stack(images, axis=0)  # [4, H, W, D] #np.stack()有点像list.append(list()),相当于往np数组里加入一个相同长度的数组，并增加一个维度，这里面的4就是代表四个模态的维度
-    label_np = seg.astype(np.uint8)      # [H, W, D] 长度，宽度，深度(切片高度),把标签里的数据转换成unit8整数类型(原本可能是float之类的)，方便后续训练和loss计算。
+```python
+    image_np = np.stack(images, axis=0)  
+    # [4, H, W, D] #np.stack()有点像list.append(list()),相当于往np数组里加入一个相同长度的数组，并增加一个维度，这里面的4就是代表四个模态的维度
+    label_np = seg.astype(np.uint8)      
+    # [H, W, D] 长度，宽度，深度(切片高度),把标签里的数据转换成unit8整数类型(原本可能是float之类的)，方便后续训练和loss计算。
 
     # 随机裁剪patch，重点保证肿瘤区域覆盖
-    image_np, label_np = self.random_crop(image_np, label_np)#因为默认的图像太大了，训练起来很麻烦，所以切成128的三维图像，然后尽可能保留肿瘤区域
+    image_np, label_np = self.random_crop(image_np, label_np)
+    #因为默认的图像太大了，训练起来很麻烦，所以切成128的三维图像，然后尽可能保留肿瘤区域
+```
 
+由于图像数据尺寸过大，并且很多存在很多的无效空白区域（实际上我们只需要包含肿瘤的部分），所以我们这里需要对原始数据进行性裁剪：
+
+```python
+    def random_crop(self, image, label):
+        c, h, w, d = image.shape
+        #读取每个维度图片的尺寸-c：维度，h：高度，w：宽度，d：切片层数
+        ph, pw, pd = self.patch_size
+        #裁剪成128*128*128
+
+        valid_h = max(h - ph, 1)
+        valid_w = max(w - pw, 1)
+        valid_d = max(d - pd, 1)
+        # 如果图像三维比128大，就进行切片处理，然后这个就是不越界的区域，简单理解就是从240长度里可以切掉112就是128
+
+        for _ in range(10):
+            hh = random.randint(0, valid_h)#范围是从0到112，选个随机值
+            ww = random.randint(0, valid_w)#0-112
+            dd = random.randint(0, valid_d)#0-27
+            """
+            切除标签中的区域，从随机点开始128的区域，举个例子，深度一共是155，那我能切除的区域就是从0-27(超过27就没有意义了)
+            然后我从0-27随机选择，比如我选择20，那我选择出的区域就是[20,148]，如果肿瘤标签确实在这个范围内，那我就可以保留
+            相当于我把没用的一些图像给移除掉了，下面这一段就是这个作用
+            """
+            patch_label = label[hh:hh+ph, ww:ww+pw, dd:dd+pd]
+            if np.sum(patch_label > 0) > self.min_tumor_voxels:
+                #如果在我选择的这个区域内，肿瘤样本总和在100个以上，我就可以保留这个切片
+                break
+            #不过只有10次机会，所以如果没能完全满足最小肿瘤数量的话也得继续
+
+        image_patch = image[:, hh:hh+ph, ww:ww+pw, dd:dd+pd]
+        label_patch = label[hh:hh+ph, ww:ww+pw, dd:dd+pd]
+        return image_patch, label_patch
+```
+
+以训练图像数据为例，使用可视化的图片来演示以下这段过程：
+
+![image-20250801125428233](./assets/image-20250801125428233.png)
+
+分别获取模态图像完整的尺寸[H:240,W:240,D:155]，我们需要从中选择出[H:128,W:128,D:128]的图像，我们的选择的区间是连续的，所以能够开始选择的起点范围也是固定的：
+$$
+Start Area = [0, SizeMax-SelectNumber]
+$$
+其中:
+
+- StartArea是选择能够保留的起点，
+- SizeMax是3D图像三维的最大值[H:240,W:240,D:155]
+- SelectNumber是我们决定选取的范围
+
+例如图像长度H，最大值为240，我们需要在其中选择128个连续图像，那么我们能够选取的开始点范围就是[0,112],对应的结束点就是[128,240]，然后我们通过随机选择起点，切割128步长的图像，这样就得到了一个三维为128x128x128的图像。
+
+![image-20250801134450777](./assets/image-20250801134450777.png)
+
+经过图像数据标准化和裁切后，基本上就完成了训练图像和标签图像的处理，为了能让模型有更好的泛化能力，所以还可以对数据进行一下增强，这里就选择了在图像方面相对流行的图像翻转增强。即对训练图像进行随机左右旋转，最后通过torch.tensor返回数据，通过torch内置张量模块可以让其在CUDA上计算。
+
+```python
     # 简单数据增强示例，随机翻转
     if self.augment and self.mode == 'train':
         if random.random() > 0.5:
@@ -205,6 +264,12 @@ label_np = seg.astype(np.uint8)      # [H, W, D] 长度，宽度，深度(切片
 
     return torch.tensor(image_np.copy(), dtype=torch.float32), torch.tensor(label_np.copy(), dtype=torch.long)
 ```
+
+
+
+### Model.py
+
+未完继续
 
 
 

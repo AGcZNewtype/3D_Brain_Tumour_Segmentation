@@ -1,2 +1,10 @@
 # Project exclude paths
 /.venv/
+
+
+# 忽略 dataset 文件夹及其内容
+dataset/
+
+# 忽略所有 .nii 文件（即使不在 dataset 文件夹内）
+*.nii
+*.nii.gz
