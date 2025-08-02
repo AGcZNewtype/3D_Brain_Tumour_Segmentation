@@ -1,6 +1,10 @@
 import torch
 import torch.nn as nn
 
+
+"""
+    使用三维U-Net模型进行训练和测试
+"""
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
