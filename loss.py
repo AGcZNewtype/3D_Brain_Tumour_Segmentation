@@ -7,6 +7,7 @@ class DiceLoss(nn.Module):
         self.smooth = smooth
 
     def forward(self, inputs, targets):
+        assert targets.dtype == torch.long, f"Targets must be long, got {targets.dtype}"
         inputs = torch.softmax(inputs, dim=1)
         targets = nn.functional.one_hot(targets, num_classes=inputs.shape[1])
         targets = targets.permute(0, 4, 1, 2, 3).float()

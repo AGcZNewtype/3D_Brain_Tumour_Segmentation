@@ -59,7 +59,7 @@ MODALITIES = ['flair', 't1', 't1ce', 't2']
 
 ```python
 class BraTSDataset(Dataset):
-    def __init__(self, root_dir, patch_size=(128, 128, 128), mode='train', sample_num=4, min_tumor_voxels=100, augment=False):
+    def __init__(self, root_dir, patch_size=(128, 128, 128), mode='train', sample_num=4, min_tumor_voxels=100, augment=False,max_data=None):
 
         self.root_dir = root_dir
         self.patch_size = patch_size
@@ -70,7 +70,7 @@ class BraTSDataset(Dataset):
 
         self.patient_dirs = sorted([
             os.path.join(root_dir, d) for d in os.listdir(root_dir)
-            if os.path.isdir(os.path.join(root_dir, d)) 
+            if os.path.isdir(os.path.join(root_dir, d))
             #判断每个案例文件夹名称是否正确，正确就添加到全部列表中用于选择
         ])
 ```
@@ -83,8 +83,18 @@ class BraTSDataset(Dataset):
 - sample_num: 每个病人采样patch数量（四个模态所以是4）
 - min_tumor_voxels: 采样patch时肿瘤体素最小数量阈值（切片的时候需要尽可能满足这个条件）
 - augment: 是否启用简单数据增强
+- maxdata：是否使用全部数据
 
 其次是对患者（案例）的文件进行确认，确保路径合法且可用。
+
+由于数据及非常大，调试的时候不太方便，所以增加了一个max_data,默认为None即适用所有的数据，非空的话就使用填入的数量
+
+```python
+         #由于数据及非常大，调试的时候不太方便，所以增加了一个all_data,默认为true即适用所有的数据，Flase的话就使用sample number的数量
+        if  max_data is not None:
+            self.patient_dirs = self.patient_dirs[:max_data]
+            print(f"[INFO] Debug mode: only using {len(self.patient_dirs)} patients")
+```
 
 **定义一些魔法方法，方便后续调用类时能够快速使用：**
 

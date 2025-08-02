@@ -16,7 +16,7 @@ MODALITIES = ['flair', 't1', 't1ce', 't2']
 """
 
 class BraTSDataset(Dataset):
-    def __init__(self, root_dir, patch_size=(128, 128, 128), mode='train', sample_num=4, min_tumor_voxels=100, augment=False):
+    def __init__(self, root_dir, patch_size=(128, 128, 128), mode='train', sample_num=4, min_tumor_voxels=100, augment=False,max_data=None):
         """
         root_dir: 数据根目录
         patch_size: 裁剪patch大小
@@ -24,6 +24,7 @@ class BraTSDataset(Dataset):
         sample_num: 每个病人采样patch数量
         min_tumor_voxels: 采样patch时肿瘤体素最小数量阈值
         augment: 是否启用简单数据增强
+        maxdata：是否使用全部数据
         """
         self.root_dir = root_dir
         self.patch_size = patch_size
@@ -37,7 +38,12 @@ class BraTSDataset(Dataset):
             if os.path.isdir(os.path.join(root_dir, d))
             #判断每个案例文件夹名称是否正确，正确就添加到全部列表中用于选择
         ])
-        # print(len(self.patient_dirs),type(self.patient_dirs))
+
+
+        #由于数据及非常大，调试的时候不太方便，所以增加了一个all_data,默认为true即适用所有的数据，Flase的话就使用sample number的数量
+        if  max_data is not None:
+            self.patient_dirs = self.patient_dirs[:max_data]
+            print(f"[INFO] Debug mode: only using {len(self.patient_dirs)} patients")
 
     def __len__(self):
         return len(self.patient_dirs) * self.sample_num
@@ -90,6 +96,10 @@ class BraTSDataset(Dataset):
             if random.random() > 0.5:
                 image_np = np.flip(image_np, axis=2)  # 随机左右翻转
                 label_np = np.flip(label_np, axis=1)
+
+        if np.any(label_np == 4):
+            label_np[label_np == 4] = 3
+
 
         return torch.tensor(image_np.copy(), dtype=torch.float32), torch.tensor(label_np.copy(), dtype=torch.long)
 
