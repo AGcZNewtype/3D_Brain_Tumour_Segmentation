@@ -8,8 +8,9 @@ import torch.nn as nn
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
+        #定义模型每层的结构块。
         self.layers = nn.Sequential(
-            nn.Conv3d(in_channels, out_channels, 3, padding=1),
+            nn.Conv3d(in_channels, out_channels, 3, padding=1),#3D卷积层
             nn.BatchNorm3d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, 3, padding=1),

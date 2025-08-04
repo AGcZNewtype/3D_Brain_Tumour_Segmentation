@@ -51,7 +51,7 @@ def set_seed(seed=42):
     torch.backends.cudnn.benchmark = False
 
 
-def save_checkpoint(model, optimizer, epoch, path="checkpoint.pth"):
+def save_checkpoint(model, optimizer, epoch, path="runs\unet3\dcheckpoint.pth"):
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
