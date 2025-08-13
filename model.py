@@ -28,7 +28,9 @@ class UNet3D(nn.Module):
         self.enc2 = DoubleConv(32, 64)
         self.enc3 = DoubleConv(64, 128)
         self.pool = nn.MaxPool3d(2)
+        #定义3D最大池化层
         self.up1 = nn.ConvTranspose3d(128, 64, 2, stride=2)
+        # 定义反卷积方法，其中in_channel是输入的通道维度尺寸，out_channel是输出的通道维度尺寸，这里我们需要把吃花钱的图像也输入进来，所以这里直接减半
         self.dec1 = DoubleConv(128, 64)
         self.up2 = nn.ConvTranspose3d(64, 32, 2, stride=2)
         self.dec2 = DoubleConv(64, 32)

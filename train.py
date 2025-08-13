@@ -2,8 +2,8 @@ import torch
 from torch.utils.data import DataLoader
 from dataset import BraTSDataset
 from model import UNet3D
-from loss import DiceLoss
-from utils import set_seed, dice_score, TensorboardLogger, save_checkpoint
+from loss import DiceLoss, dice_score
+from utils import set_seed, TensorboardLogger, save_checkpoint
 import os
 from tqdm import tqdm
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -15,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 构造 3D 数据集（修改为你实际数据路径）
 data_root = "E:/Workspace/PycharmProjects/MRI/datasets/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData"
-train_dataset = BraTSDataset(root_dir=data_root, patch_size=(128, 128, 128), mode='train', sample_num=4,max_data=50)
+train_dataset = BraTSDataset(root_dir=data_root, patch_size=(128, 128, 128), mode='train', sample_num=4,max_data=60)
 train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
 
 # 初始化模型
@@ -56,7 +56,7 @@ for epoch in range(1, 11):
     print(f"Epoch [{epoch}/100] - Loss: {avg_loss:.4f}")
 
     # 保存模型
-    if epoch % 10 == 0:
-        save_checkpoint(model, optimizer, epoch, path=f"checkpoint_epoch{epoch}.pth")
+    # if epoch % 10 == 0:
+    #     save_checkpoint(model, optimizer, epoch, path=f"checkpoint_epoch{epoch}.pth")
 
 logger.close()

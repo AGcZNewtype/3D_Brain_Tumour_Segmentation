@@ -7,27 +7,6 @@ import nibabel as nib
 from torch.utils.tensorboard import SummaryWriter
 
 
-def dice_score(preds, targets, num_classes=4):
-    """
-    计算每个类别的 Dice Score
-    preds: 模型输出 logits，shape: (B, C, H, W, D)
-    targets: 真实标签，shape: (B, H, W, D)
-    """
-    preds = torch.argmax(torch.softmax(preds, dim=1), dim=1)
-    preds = preds.view(-1)
-    targets = targets.view(-1)
-
-    scores = []
-    for cls in range(num_classes):
-        pred_inds = preds == cls
-        target_inds = targets == cls
-        intersection = (pred_inds & target_inds).float().sum()
-        union = pred_inds.float().sum() + target_inds.float().sum()
-        dice = (2. * intersection) / (union + 1e-5)
-        scores.append(dice.item())
-    return scores
-
-
 def save_nifti(output_tensor, reference_path, save_path):
     """
     保存分割结果为 NIfTI 文件
@@ -51,7 +30,7 @@ def set_seed(seed=42):
     torch.backends.cudnn.benchmark = False
 
 
-def save_checkpoint(model, optimizer, epoch, path="runs\unet3\dcheckpoint.pth"):
+def save_checkpoint(model, optimizer, epoch, path="runs\\unet3\\dcheckpoint.pth"):
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
