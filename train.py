@@ -6,6 +6,7 @@ from loss import DiceLoss, dice_score
 from utils import set_seed, TensorboardLogger, save_checkpoint
 import os
 from tqdm import tqdm
+
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 
