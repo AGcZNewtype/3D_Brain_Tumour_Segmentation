@@ -381,7 +381,9 @@ class UNet3D(nn.Module):
 
 这个文件中主要是定义Dice Loss方法和Dice Score的计算。
 
-其实Dice就是F1，
+其实Dice就是F1：
+
+
 $$
 \text{Dice} = \frac{2 \cdot |X \cap Y|}{|X| + |Y|}
 ⇔
@@ -389,6 +391,7 @@ F1 = \frac{2 \cdot \text{precision} \cdot \text{recall}}{\text{precision} + \tex
 =
 \frac{2 \cdot \text{TP}}{2 \cdot\text{TP} + \text{FP}+\text{FN}}
 $$
+
 
 
 ```python
