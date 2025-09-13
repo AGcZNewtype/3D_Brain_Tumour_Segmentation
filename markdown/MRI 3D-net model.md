@@ -384,12 +384,9 @@ class UNet3D(nn.Module):
 其实Dice就是F1：
 
 
+
 $$
-\text{Dice} = \frac{2 \cdot |X \cap Y|}{|X| + |Y|}
-⇔
-F1 = \frac{2 \cdot \text{precision} \cdot \text{recall}}{\text{precision} + \text{recall}}
-=
-\frac{2 \cdot \text{TP}}{2 \cdot\text{TP} + \text{FP}+\text{FN}}
+\text{Dice} = \frac{2 \cdot |X \cap Y|}{|X| + |Y|} \Leftrightarrow F1 = \frac{2 \cdot \text{precision} \cdot \text{recall}}{\text{precision} + \text{recall}} = \frac{2 \cdot \text{TP}}{2 \cdot \text{TP} + \text{FP}+\text{FN}}
 $$
 
 
