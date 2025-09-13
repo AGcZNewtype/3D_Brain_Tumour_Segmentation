@@ -10,4 +10,4 @@ This project aims to use BraTS2020 to disclose brain MRI data and identify tumor
 <br>
 <h3>Readme</h3>
 <h3>项目介绍</h3>
-<h4>Link:</h4>
+<h4>Link:https://github.com/AGcZNewtype/3D_Brain_Tumour_Segmentation/blob/master/markdown/MRI%203D-net%20model.md</h4>
